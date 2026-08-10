@@ -1,0 +1,386 @@
+<!doctype html>
+<html lang="zh-TW">
+  <head>
+    <meta charset="UTF-8" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>羽球分組</title>
+
+    <!-- Material Symbols Rounded -->
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/css/theme.css" />
+    <link rel="stylesheet" href="/css/style.css" />
+    <link rel="manifest" href="./manifest.json" />
+    <meta name="theme-color" content="#000" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <link rel="apple-touch-icon" href="./icons/icon-192.png" />
+  </head>
+
+  <script>
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("./js/sw.js");
+      });
+    }
+  </script>
+
+  <body>
+    <div class="page">
+      <!-- =====================================================
+         Header
+    ===================================================== -->
+
+      <header class="page-header">
+        <div class="title-wrap">
+          <div class="wrap">
+            <div class="flex-1">
+              <span class="title">羽球分組排程器</span>
+              <span class="subtitle">自動產生最佳比賽組合</span>
+            </div>
+            <button
+              id="themeToggle"
+              class="btn btn-icon theme-toggle"
+              type="button"
+              title="切換主題"
+            >
+              <span id="themeIcon" class="material-symbols-rounded theme-icon">
+                dark_mode
+              </span>
+            </button>
+          </div>
+        </div>
+
+        <div class="header-actions">
+          <button id="resetResultBtn" class="btn">
+            <span class="material-symbols-rounded"> delete_sweep </span>
+
+            清除結果
+          </button>
+
+          <button id="generateBtn" class="btn btn-primary">
+            <span class="material-symbols-rounded"> auto_awesome </span>
+
+            自動分組
+          </button>
+        </div>
+      </header>
+
+      <!-- =====================================================
+         Layout
+    ===================================================== -->
+
+      <div class="layout">
+        <!-- =================================================
+             Sidebar
+        ================================================== -->
+
+        <aside class="sidebar">
+          <!-- Players -->
+
+          <section class="card">
+            <div class="card-header">
+              <h2 class="card-title">參加人員</h2>
+
+              <span id="playerCount" class="subtitle"> 0 人 </span>
+            </div>
+
+            <div class="card-body">
+              <div class="player-input">
+                <input
+                  id="playerInput"
+                  class="input"
+                  type="text"
+                  maxlength="20"
+                  placeholder="輸入姓名"
+                />
+
+                <button id="addPlayerBtn" class="btn btn-icon">
+                  <span class="material-symbols-rounded"> add </span>
+                </button>
+              </div>
+
+              <div id="playerList" class="player-list"></div>
+            </div>
+          </section>
+
+          <!-- Settings -->
+
+          <section class="card">
+            <div class="card-header">
+              <h2 class="card-title">分組設定</h2>
+            </div>
+
+            <div class="card-body">
+              <!-- 場次 -->
+
+              <div class="form-group">
+                <label class="form-label" for="roundCount"> 比賽場次 </label>
+
+                <input
+                  id="roundCount"
+                  class="input"
+                  type="number"
+                  min="1"
+                  max="100"
+                  value="10"
+                />
+              </div>
+
+              <!-- 最佳化次數 -->
+
+              <div class="form-group">
+                <label class="form-label" for="attemptCount">
+                  最佳化嘗試次數
+                </label>
+
+                <input
+                  id="attemptCount"
+                  class="input"
+                  type="number"
+                  min="100"
+                  max="20000"
+                  step="100"
+                  value="3000"
+                />
+
+                <div class="subtitle">次數越高，越有機會找到較佳組合。</div>
+              </div>
+
+              <!-- 最大連續上場 -->
+
+              <div class="form-group">
+                <label class="form-label" for="maxPlayStreak">
+                  最多連續上場
+                </label>
+
+                <input
+                  id="maxPlayStreak"
+                  class="input"
+                  type="number"
+                  min="1"
+                  max="10"
+                  value="2"
+                />
+
+                <div class="subtitle">超過此場數的分組會直接淘汰。</div>
+              </div>
+
+              <!-- 最大連續未上場 -->
+
+              <div class="form-group">
+                <label class="form-label" for="maxRestStreak">
+                  最多連續未上場
+                </label>
+
+                <input
+                  id="maxRestStreak"
+                  class="input"
+                  type="number"
+                  min="1"
+                  max="10"
+                  value="2"
+                />
+
+                <div class="subtitle">裁判也算未上場。</div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Rules -->
+
+          <section class="card">
+            <div class="card-header">
+              <h2 class="card-title">分組規則</h2>
+            </div>
+
+            <div class="card-body">
+              <div class="rule-list">
+                <div class="rule">
+                  <span class="material-symbols-rounded"> check_circle </span>
+
+                  每場 2V2
+                </div>
+
+                <div class="rule">
+                  <span class="material-symbols-rounded"> check_circle </span>
+
+                  每場 1 位裁判
+                </div>
+
+                <div class="rule">
+                  <span class="material-symbols-rounded"> check_circle </span>
+
+                  上場次數差距最多 1 場
+                </div>
+
+                <div class="rule">
+                  <span class="material-symbols-rounded"> check_circle </span>
+
+                  不超過設定的連續上場
+                </div>
+
+                <div class="rule">
+                  <span class="material-symbols-rounded"> check_circle </span>
+
+                  不超過設定的連續未上場
+                </div>
+
+                <div class="rule">
+                  <span class="material-symbols-rounded"> check_circle </span>
+
+                  優先不同隊友
+                </div>
+
+                <div class="rule">
+                  <span class="material-symbols-rounded"> check_circle </span>
+
+                  優先不同對戰組合
+                </div>
+              </div>
+            </div>
+          </section>
+        </aside>
+
+        <!-- =================================================
+             Main
+        ================================================== -->
+
+        <main class="content">
+          <!-- Summary -->
+
+          <div class="summary">
+            <div class="summary-item">
+              <span class="summary-label"> 參加人數 </span>
+
+              <span id="summaryPlayers" class="summary-value"> 0 </span>
+            </div>
+
+            <div class="summary-item">
+              <span class="summary-label"> 比賽場次 </span>
+
+              <span id="summaryRounds" class="summary-value"> 0 </span>
+            </div>
+
+            <div class="summary-item">
+              <span class="summary-label"> 每場上場 </span>
+
+              <span class="summary-value"> 4 </span>
+            </div>
+
+            <div class="summary-item">
+              <span class="summary-label"> 每場裁判 </span>
+
+              <span class="summary-value"> 1 </span>
+            </div>
+          </div>
+
+          <!-- Algorithm -->
+
+          <section class="card algorithm">
+            <div class="algorithm-body">
+              <div>
+                <div class="subtitle">最佳化結果</div>
+
+                <div
+                  id="algorithmMessage"
+                  style="margin-top: 4px; font-weight: 700"
+                >
+                  尚未產生分組
+                </div>
+              </div>
+
+              <div class="score">
+                <span> Score </span>
+
+                <span id="scoreValue" class="score-value"> - </span>
+              </div>
+            </div>
+          </section>
+
+          <!-- Match List -->
+
+          <div id="roundList" class="round-list"></div>
+
+          <!-- Statistics -->
+
+          <section class="card stats">
+            <div class="card-header">
+              <h2 class="card-title">個人上場統計</h2>
+
+              <span id="statsSubtitle" class="subtitle"> 尚無資料 </span>
+            </div>
+
+            <div class="card-body">
+              <div class="table-wrap">
+                <table class="stats-table">
+                  <thead>
+                    <tr>
+                      <th>球員</th>
+
+                      <th>上場</th>
+
+                      <th>裁判</th>
+
+                      <th>休息</th>
+
+                      <th>上場率</th>
+                    </tr>
+                  </thead>
+
+                  <tbody id="statsBody"></tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+        </main>
+      </div>
+    </div>
+
+    <!-- =====================================================
+ Loading
+====================================================== -->
+
+    <div id="loading" class="loading">
+      <div class="loading-box">
+        <div class="spinner"></div>
+
+        <div class="loading-title">正在產生賽程</div>
+
+        <div class="loading-progress">
+          <div class="loading-progress-bar">
+            <div
+              id="loadingProgress"
+              class="loading-progress-value"
+              style="width: 0%"
+            ></div>
+          </div>
+
+          <div id="loadingProgressText" class="loading-progress-text">
+            0 / 5000
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- =====================================================
+     Toast
+====================================================== -->
+
+    <div id="toast" class="toast"></div>
+    <script src="/js/script.js"></script>
+  </body>
+</html>
