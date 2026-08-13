@@ -1,12 +1,15 @@
 const CACHE_NAME = "badminton-scheduler-v1";
 
 const CACHE_FILES = [
-  "./",
-  "./index.html",
-  "../css/",
-  "../js/",
+  "../",
+  "../index.html",
+  "../css/theme.css",
+  "../css/style.css",
+  "../js/sw.js",
+  "../js/script.js",
   "../manifest.json",
-  "..images/"
+  "../images/icon-192.png",
+  "../images/icon-512.png"
 ];
 
 self.addEventListener("install", (event) => {
